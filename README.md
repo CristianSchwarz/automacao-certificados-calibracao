@@ -1,86 +1,160 @@
-# Sistema de Calibração de Instrumentos — AV04 (versão inicial)
+# Sistema de Automação da Emissão de Certificados de Calibração — AV04
 
-Projeto acadêmico do Projeto Aplicado III, com foco na importação e análise demonstrativa de planilhas de calibração.
+Projeto acadêmico desenvolvido para o **Projeto Aplicado III — UniSENAI**, com o objetivo de automatizar o processamento demonstrativo de planilhas de calibração, a análise dos resultados e a geração de relatórios em PDF.
 
-## Funcionalidades existentes e incluídas nesta versão
+A solução utiliza Python e Flask para a aplicação web e serviços da AWS para hospedagem e armazenamento dos arquivos processados.
 
-- Importação de planilhas Excel `.xlsx` e `.xlsm`.
-- Processamento das abas `Importação` e `Report` conforme as regras existentes no MVP.
+## Funcionalidades
+
+- Importação de planilhas Excel nos formatos `.xlsx` e `.xlsm`.
+- Processamento das abas `Importação` e `Report`, conforme as regras implementadas no MVP.
 - Cálculo de limites, erros e classificação dos resultados.
-- Geração de relatório PDF demonstrativo.
-- **Novo:** página de histórico dos processamentos guardados localmente.
-- **Novo:** página de consulta resumida acessível por QR Code.
-- **Novo:** geração do QR Code de consulta após processar uma planilha.
+- Geração de relatórios PDF demonstrativos.
+- Histórico dos processamentos realizados.
+- Consulta resumida de resultados por identificador.
+- Geração de QR Code para acesso à consulta dos resultados.
+- Armazenamento de planilhas, resultados em JSON e relatórios PDF no Amazon S3.
 
-## Tecnologias
+## Tecnologias utilizadas
 
-- Python
-- Flask
-- Pandas e OpenPyXL
-- ReportLab
-- qrcode / Pillow
-- Bootstrap 5 para a interface
+- **Python 3.12** — linguagem de programação.
+- **Flask** — desenvolvimento da aplicação web.
+- **Pandas e OpenPyXL** — leitura e processamento de planilhas.
+- **ReportLab** — geração de relatórios PDF.
+- **qrcode e Pillow** — geração de QR Codes.
+- **Bootstrap 5** — interface web.
+- **Docker** — empacotamento da aplicação em contêiner.
+- **Amazon ECR** — armazenamento da imagem Docker.
+- **AWS Lambda** — execução da aplicação na nuvem.
+- **AWS Lambda Web Adapter** — integração da aplicação Flask com o Lambda.
+- **Amazon S3** — armazenamento dos arquivos de entrada e resultados.
 
-## Como executar localmente
+## Arquitetura da solução
 
-1. Instale Python 3.11 ou superior.
-2. Abra um terminal nesta pasta.
-3. Crie e ative um ambiente virtual:
+A aplicação é executada na AWS Lambda a partir de uma imagem Docker armazenada no Amazon ECR. O Amazon S3 é utilizado para armazenar os arquivos enviados e os resultados gerados.
 
-   ```bash
-   python -m venv venv
-   ```
+Fluxo simplificado:
 
-   Windows PowerShell:
+1. O usuário acessa a aplicação web.
+2. Envia uma planilha Excel para processamento.
+3. A aplicação analisa os dados e calcula os resultados conforme as regras implementadas.
+4. É gerado um relatório PDF demonstrativo e um QR Code para consulta.
+5. Os arquivos e resultados são armazenados no Amazon S3.
+6. O usuário pode consultar o histórico e visualizar o resumo de um processamento.
 
-   ```powershell
-   .\venv\Scripts\Activate.ps1
-   ```
+### Serviços AWS
 
-4. Instale as dependências:
+| Serviço | Finalidade |
+|---|---|
+| AWS Lambda | Execução da aplicação |
+| Amazon ECR | Armazenamento da imagem Docker |
+| Amazon S3 | Armazenamento das planilhas, resultados JSON e PDFs |
+| AWS IAM | Controle de permissões de acesso |
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+**Região AWS:** `us-east-2` — Ohio.
 
-5. Inicie a aplicação:
+## Estrutura de armazenamento no S3
 
-   ```bash
-   python app.py
-   ```
+O bucket utilizado no projeto é `calibracao-certificados-cristian-2026`.
 
-6. Acesse o endereço local mostrado no terminal pelo Flask.
+Os arquivos são organizados pelos seguintes prefixos:
+
+- `entradas-excel/` — planilhas enviadas para processamento.
+- `resultados-json/` — resultados dos processamentos.
+- `relatorios-pdf/` — relatórios PDF gerados.
+
+O acesso ao bucket deve permanecer privado, com permissões concedidas conforme a necessidade da aplicação.
 
 ## Rotas principais
 
-- `/` — importar e processar uma planilha.
-- `/historico` — visualizar processamentos salvos nesta instância.
-- `/consulta/<identificador>` — consultar o resumo de um processamento.
-- `/qr/<identificador>.png` — gerar o QR Code de consulta.
+| Rota | Descrição |
+|---|---|
+| `/` | Página inicial para importar e processar uma planilha |
+| `/historico` | Consulta do histórico de processamentos |
+| `/consulta/<identificador>` | Consulta resumida de um processamento |
+| `/qr/<identificador>.png` | Geração do QR Code correspondente |
 
-## Situação da AV04
+## Como executar localmente
 
-Esta versão mantém o modo local e inclui uma integração opcional com S3 para planilhas, resultados JSON e PDFs. **Ainda não é o deploy da AV04.** É necessário configurar as variáveis de ambiente e permissões AWS, testar a integração na conta e preparar um ambiente de hospedagem compatível antes de considerar a aplicação publicada.
+### Pré-requisitos
 
-O QR Code utiliza o endereço base pelo qual o usuário acessa a aplicação. Em execução local, ele não será acessível de outros dispositivos se apontar para `127.0.0.1`/`localhost`. Para leitura pelo celular, a aplicação deve estar acessível pela rede local usando o IP do computador ou publicada na nuvem.
+- Python 3.11 ou superior.
+- Git, caso deseje clonar o repositório.
+- Dependências listadas em `requirements.txt`.
 
-## Limitação metrológica importante
+### Instalação
 
-O PDF é um **relatório demonstrativo acadêmico**, não um certificado metrológico oficial. As regras de cálculo já existentes no MVP devem ser confirmadas com o docente e com os critérios técnicos aplicáveis antes de qualquer uso operacional.
+Clone o repositório e acesse a pasta do projeto:
 
-## Integração opcional com Amazon S3
+```bash
+git clone https://github.com/CristianSchwarz/automacao-certificados-calibracao.git
+cd automacao-certificados-calibracao
+```
 
-A aplicação continua funcionando localmente quando `S3_BUCKET_NAME` não está definido. Para habilitar o armazenamento no S3, configure as variáveis de ambiente no ambiente de execução:
+Crie e ative um ambiente virtual.
 
-- `S3_BUCKET_NAME=calibracao-certificados-cristian-2026`
-- `AWS_REGION=us-east-2`
+**Windows PowerShell:**
 
-Com o bucket configurado, a aplicação envia planilhas para `entradas-excel/`, os resultados JSON para `resultados-json/` e os PDFs para `relatorios-pdf/`. O prefixo `resultados-json/` é criado automaticamente quando o primeiro resultado é gravado; não é necessário criar uma pasta manualmente no console.
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
 
-### Permissões AWS
+Instale as dependências:
 
-O usuário ou papel de execução precisa de permissões limitadas ao bucket do projeto para `s3:PutObject`, `s3:GetObject` e `s3:ListBucket`. Não habilite acesso público ao bucket. Em hospedagem AWS, prefira um papel IAM de execução em vez de armazenar chaves de acesso no código ou no repositório. Para desenvolvimento local, use um perfil AWS configurado na máquina, se necessário.
+```bash
+pip install -r requirements.txt
+```
 
-### Importante sobre a hospedagem
+Configure as variáveis de ambiente necessárias, quando aplicável, utilizando o arquivo `.env.example` como referência.
 
-A integração com o S3 não publica o site automaticamente. A aplicação ainda é Flask e precisa de um ambiente de hospedagem compatível. Antes de criar outros serviços AWS, confira a elegibilidade do plano gratuito, os limites e os custos aplicáveis à conta.
+Inicie a aplicação:
+
+```bash
+python app.py
+```
+
+Acesse o endereço local informado pelo Flask no terminal.
+
+> A execução local sem configuração do S3 depende do comportamento previsto na aplicação. Para utilizar o armazenamento em nuvem, configure o perfil ou as credenciais AWS apropriadas e as permissões necessárias.
+
+## Configuração e segurança na AWS
+
+Na implantação em nuvem, a aplicação utiliza a função IAM associada à AWS Lambda para acessar os recursos necessários.
+
+A variável de ambiente utilizada para identificar o bucket é:
+
+```text
+S3_BUCKET_NAME=calibracao-certificados-cristian-2026
+```
+
+A região é `us-east-2` e é disponibilizada pelo ambiente AWS. Não é necessário definir manualmente uma variável `AWS_REGION` na Lambda quando ela já é fornecida pelo serviço.
+
+As permissões devem ser limitadas aos recursos utilizados pelo projeto. Credenciais AWS não devem ser incluídas no código-fonte, no arquivo `.env` ou no repositório GitHub.
+
+## Testes realizados
+
+Foram realizados testes funcionais da aplicação publicada, contemplando:
+
+- Acesso à aplicação na nuvem.
+- Envio e processamento de planilhas Excel.
+- Geração de relatórios PDF.
+- Geração e consulta por QR Code.
+- Consulta do histórico de processamentos.
+- Verificação do armazenamento dos arquivos no Amazon S3.
+
+## Limitação metrológica
+
+Os documentos PDF gerados nesta aplicação são **relatórios demonstrativos acadêmicos** e não constituem certificados metrológicos oficiais.
+
+As regras de cálculo implementadas no MVP devem ser validadas com o docente e com os critérios técnicos aplicáveis antes de qualquer utilização operacional.
+
+## Considerações finais
+
+O projeto demonstra a integração de uma aplicação web em Python com serviços de computação, contêineres e armazenamento em nuvem da AWS. A solução busca reduzir etapas manuais no processamento demonstrativo de planilhas e organizar os resultados para consulta posterior.
+
+---
+
+**Projeto:** Automação da Emissão de Certificados de Calibração — AV04  
+**Instituição:** UniSENAI  
+**Repositório:** https://github.com/CristianSchwarz/automacao-certificados-calibracao
