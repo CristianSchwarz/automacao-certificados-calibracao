@@ -1,0 +1,23 @@
+
+# Credenciais e variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Arquivos gerados e dados de teste
+uploads/
+*.pdf
+*.xlsx
+*.xls
+*.log
+
+# Git e editor
+.git/
+.vscode/
+teste-s3.txt
