@@ -586,7 +586,13 @@ def qr_resultado(job_id):
         abort(404)
     if not carregar_resultado(job_id):
         abort(404)
-    url_consulta = url_for("consulta_qr", job_id=job_id, _external=True)
+    # PUBLIC_BASE_URL permite que a aplicação local gere QR Codes que abrem
+    # a consulta hospedada na AWS. Sem ela, mantém o comportamento local.
+    public_base_url = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+    if public_base_url:
+        url_consulta = f"{public_base_url}{url_for('consulta_qr', job_id=job_id)}"
+    else:
+        url_consulta = url_for("consulta_qr", job_id=job_id, _external=True)
     codigo = qrcode.QRCode(box_size=8, border=3)
     codigo.add_data(url_consulta)
     codigo.make(fit=True)

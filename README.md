@@ -158,3 +158,28 @@ O projeto demonstra a integração de uma aplicação web em Python com serviço
 **Projeto:** Automação da Emissão de Certificados de Calibração — AV04  
 **Instituição:** UniSENAI  
 **Repositório:** https://github.com/CristianSchwarz/automacao-certificados-calibracao
+
+
+## Execução local com consulta pública por QR Code
+
+O script `iniciar_aplicacao_schulz.bat` inicia o Flask localmente e configura:
+- `S3_BUCKET_NAME=calibracao-certificados-cristian-2026`
+- `AWS_REGION=us-east-2`
+- `PUBLIC_BASE_URL=https://dt3rbp3b7wgmoroeegwwpfqsqa0jywxy.lambda-url.us-east-2.on.aws`
+
+A interface de trabalho continua em `http://127.0.0.1:5000`. Os QR Codes gerados
+pela aplicação local apontam para a rota `/consulta/<job_id>` da URL pública da
+AWS Lambda. O resultado JSON precisa ser gravado no bucket S3 para que a Lambda
+consiga recuperá-lo.
+
+### Credenciais AWS no computador
+
+Por segurança, nenhuma chave AWS é incluída neste ZIP. Antes de executar o BAT,
+configure credenciais locais com um usuário IAM/credencial temporária que tenha
+permissão de `s3:PutObject`, `s3:GetObject` e `s3:ListBucket` no bucket acima.
+Uma opção é configurar um perfil com AWS CLI (`aws configure`) e validar com
+`aws sts get-caller-identity`. Não use nem publique credenciais Root da conta AWS.
+
+A função Lambda também precisa ter permissão de leitura (`s3:GetObject`) nos
+objetos `resultados-json/` do bucket. A URL pública da Lambda não substitui essas
+permissões. Teste a execução local em um computador com credenciais autorizadas.
